@@ -1,0 +1,206 @@
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Rillow - MoM Real Estate</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
+    integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ==" crossorigin=""/> 
+  <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
+    integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ==" crossorigin=""></script>
+  <script src="eospedro.js"></script>
+  <style>
+      #map { height: 100%; width: 75%; float: left; }
+      #land_data { width: 25%; float: left;}
+  </style>
+<script>
+    function localnum(num) {
+        if (isNaN(num))
+            return "---";
+        return num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    
+    var dtms = [
+          {
+              quadrangle: 'Sinus Sabaeus',
+              name: 'Sinus Sabaeus (MC-20)',
+              lat_max: -0.7749849480450145,
+              lat_min: -1.102258120716676,
+              lon_min: 13.807780684400248,
+              lon_max: 13.911205261855166,
+              skew_sin: 0.14,
+              skew_cos: 0.07,
+              radius_sin: 0.00479,
+              radius_cos: 0.00479
+          },
+          {
+              quadrangle: 'Cebrenia',
+              name: 'Cebrenia (MC-07)',
+              lat_max: 61.59365849225825,
+              lat_min: 61.40250792700551,
+              lon_min: 155.3095410977765,
+              lon_max: 155.52895057966683,
+              skew_sin: 0.37,
+              skew_cos: 0.35,
+              radius_sin: 0.005,
+              radius_cos: 0.0106
+          },
+          {
+              quadrangle: 'Tharsis',
+              name: 'Tharsis (MC-09)',
+              lat_max: 6.119311830162541,
+              lat_min: 5.8694742922181256,
+              lon_min: -105.55054409387755,
+              lon_max: -105.44429063676385,
+              skew_sin: 0.65,
+              skew_cos: 0.64,
+              radius_sin: 0.0047,
+              radius_cos: 0.005
+          },
+          {
+              quadrangle: 'Oxia Palus',
+              name: 'Oxia Palus (MC-11)',
+              lat_max: 23.278141150806913,
+              lat_min: 23.109008524817494,
+              lon_min: -20.450766618904463,
+              lon_max: -20.35206441995965,
+              skew_sin: 0.58,
+              skew_cos: 0.57,
+              radius_sin: 0.005,
+              radius_cos: 0.0056
+          },
+      ];
+    var dtm = dtms[0];
+    var wallet = '';
+    var polygons = [];
+    
+    var selected = null;
+    
+    let queries = window.location.search.replace(/^\?/, '').split('&'), split;
+	for( let i = 0; i < queries.length; i++ ) {
+		split = queries[i].split('=');
+		if (split[0] === 'dtmn')
+            dtm = dtms[split[1]];
+        if (split[0] === 'wallet')
+            wallet = split[1];
+    }
+    
+    function showLandData(plot) {
+        if (plot.sale_id) {
+            plot.sale_id = '<a href="https://wax.atomichub.io/market/sale/' + plot.sale_id + '" targe="_blank">Sale ' + plot.sale_id + '</a>';
+            plot.sale_price = '<strong>' + localnum(plot.sale_price) + ' WAX</strong>';
+        }
+        plot.asset_id = '<a href="https://wax.atomichub.io/explorer/asset/' + plot.asset_id + '" targe="_blank">' + plot.asset_id+ '</a>';
+        document.getElementById('land_data').innerHTML = Object.entries(plot).map(x=>x.join(": ")).join("<br>") + '<img src="' + plot.backimg + '"></img>'
+    }  
+    
+    function handleClick() {
+        if (selected != null)
+            polygons[selected].setStyle({color:'white'});
+        selected = this.options.id;
+        polygons[selected].bringToFront();
+        polygons[selected].setStyle({color:'red'});
+        
+        showLandData(plots[selected])
+    }
+    
+    async function loadSales() {
+        var forSaleIcon = L.icon({
+            iconUrl: 'forsale.png',
+            iconSize: [60, 25],
+            iconAnchor: [30, 12],
+        });
+        
+        let data = await atomicFetch('/atomicmarket/v2/sales?collection_name=onmars&schema_name=land.plots&state=1&data:text.quadrangle='+encodeURI(dtm.quadrangle))
+        
+        asset_sales = []
+        
+        for (let i = 0; i < data.length; i++) {
+            for (let a = 0; a < data[i].assets.length; a++) {
+                for (let p = 0; p < plots.length; p++) {
+                    if (plots[p].asset_id == data[i].assets[a].asset_id) {
+                        plots[p].sale_id = data[i].sale_id;
+                        plots[p].sale_price = Number(data[i].price.amount) / 100000000;
+                        L.marker([plots[p].latitude, plots[p].longitude], {icon: forSaleIcon}).addTo(map);
+                    }
+                }
+            }
+        }
+    }
+      
+    async function loadPlots() {
+        plots = []
+        await fetch("landdata.json").then(res => res.json()).then(out => {
+            for (let i = 0; i < out.plots.length; i++) {
+                if (out.plots[i].latitude <= dtm.lat_max &&
+                    out.plots[i].latitude >= dtm.lat_min &&
+                    out.plots[i].longitude <= dtm.lon_max &&
+                    out.plots[i].longitude >= dtm.lon_min)
+                    plots.push(out.plots[i])
+            }
+            
+            polygons = [];
+            
+            for (h = 0; h < plots.length; h++) {
+                let cords = [];
+                for(i = 0; i < 6; i++) {
+                    cords.push([plots[h].latitude + dtm.radius_sin * Math.sin(i * 2 * Math.PI / 6 + dtm.skew_sin),
+                                plots[h].longitude + dtm.radius_cos * Math.cos(i * 2 * Math.PI / 6 + dtm.skew_cos)])
+                }
+                let fillColor = (plots[h].owner == wallet) ? 'green' : 'white';
+                polygons[h] = L.polygon(cords, {weight:5, color: 'white', fillColor: fillColor, id:h}).addTo(map);
+                polygons[h].on('click', handleClick);
+            }
+            
+            loadSales();
+        }).catch(err => {
+            console.log('land data error:', err);
+        })
+    }
+    
+    function adjust(n) {
+        if (n == 1)
+            dtm.skew_sin += 0.01
+        if (n == 2)
+            dtm.skew_sin -= 0.01
+        if (n == 3)
+            dtm.skew_cos += 0.01
+        if (n == 4)
+            dtm.skew_cos -= 0.01
+        if (n == 5)
+            dtm.radius_sin += 0.0001
+        if (n == 6)
+            dtm.radius_sin -= 0.0001
+        if (n == 7)
+            dtm.radius_cos += 0.0001
+        if (n == 8)
+            dtm.radius_cos -= 0.0001
+        
+        console.log(dtm.skew_sin, dtm.skew_cos, dtm.radius_sin, dtm.radius_cos)
+        polygons.forEach(function (item) {
+            map.removeLayer(item)
+        });
+        loadPlots();
+    }
+    
+</script>
+</head>
+<body>
+     <div id="map"></div>
+     <div id="land_data">
+         <!--
+         <a href="javascript:void(0);" onclick="adjust(1)">+ Sin</a>
+         <a href="javascript:void(0);" onclick="adjust(2)">- Sin</a><br><br>
+         <a href="javascript:void(0);" onclick="adjust(3)">+ Cos</a>
+         <a href="javascript:void(0);" onclick="adjust(4)">- Cos</a><br><br>
+         <a href="javascript:void(0);" onclick="adjust(5)">+ Radius Sin</a>
+         <a href="javascript:void(0);" onclick="adjust(6)">- Radius Sin</a><br><br>
+         <a href="javascript:void(0);" onclick="adjust(7)">+ Radius Cos</a>
+         <a href="javascript:void(0);" onclick="adjust(8)">- Radius Cos</a>
+         -->
+     </div>
+     <script>
+         var map = L.map('map').setView([(dtm.lat_max - dtm.lat_min) / 2 + dtm.lat_min, (dtm.lon_max - dtm.lon_min) / 2 + dtm.lon_min], 13);
+         
+         loadPlots();         
+     </script>
+</body>
+</html>
