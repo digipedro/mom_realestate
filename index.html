@@ -83,7 +83,8 @@
             wallet = split[1];
     }
     
-    function showLandData(plot) {
+    function showLandData(oplot) {
+        let plot = { ...oplot }
         if (plot.sale_id) {
             plot.sale_id = '<a href="https://wax.atomichub.io/market/sale/' + plot.sale_id + '" targe="_blank">Sale ' + plot.sale_id + '</a>';
             plot.sale_price = '<strong>' + localnum(plot.sale_price) + ' WAX</strong>';
