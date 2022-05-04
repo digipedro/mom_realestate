@@ -4,7 +4,7 @@ This tool shows real estate stats from Million on Mars.
 
 ## Live Webpage
 
-https://digipedro.github.io/rp_realestate/
+https://digipedro.github.io/mom_realestate/
 
 ## Donations
 
