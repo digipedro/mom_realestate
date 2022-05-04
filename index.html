@@ -8,8 +8,29 @@
     integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ==" crossorigin=""></script>
   <script src="eospedro.js"></script>
   <style>
-      #map { height: 100%; width: 75%; float: left; }
-      #land_data { width: 25%; float: left;}
+      body {
+          background-color: #121212;
+          color: white;
+          font-family: Roboto,sans-serif;
+          line-height: 1.5;
+      }
+      a {
+          color: #bbf;
+      }
+      .wrapper {
+          display: grid;
+          grid-template-columns: 75% 25%;
+          height: 100%;
+      }
+      #map {
+          height: 100%;
+      }
+      .leaflet-container {
+          background-color:rgb(188,124,93);
+      }
+      #land_data {
+          padding: 3px;
+      }
   </style>
 <script>
     function localnum(num) {
@@ -90,7 +111,15 @@
             plot.sale_price = '<strong>' + localnum(plot.sale_price) + ' WAX</strong>';
         }
         plot.asset_id = '<a href="https://wax.atomichub.io/explorer/asset/' + plot.asset_id + '" targe="_blank">' + plot.asset_id+ '</a>';
-        document.getElementById('land_data').innerHTML = Object.entries(plot).map(x=>x.join(": ")).join("<br>") + '<img src="' + plot.backimg + '"></img>'
+        let img = plot.backimg;
+        delete plot.backimg;
+        delete plot.latitude;
+        delete plot.longitude;
+        delete plot.minted_at_time;
+        delete plot.updated_at_time;
+        document.getElementById('land_data').innerHTML =
+            Object.entries(plot).map(x=>x.join(": ")).join("<br>")
+            + '<center><img src="' + img + '"></img></center>'
     }  
     
     function handleClick() {
@@ -126,6 +155,11 @@
             }
         }
     }
+    
+    function hashCode(str) {
+      return Math.abs(str.split('').reduce((prevHash, currVal) =>
+        (((prevHash << 5) - prevHash) + currVal.charCodeAt(0))|0, 0));
+    }
       
     async function loadPlots() {
         plots = []
@@ -146,12 +180,19 @@
                     cords.push([plots[h].latitude + dtm.radius_sin * Math.sin(i * 2 * Math.PI / 6 + dtm.skew_sin),
                                 plots[h].longitude + dtm.radius_cos * Math.cos(i * 2 * Math.PI / 6 + dtm.skew_cos)])
                 }
-                let fillColor = (plots[h].owner == wallet) ? 'green' : 'white';
-                polygons[h] = L.polygon(cords, {weight:5, color: 'white', fillColor: fillColor, id:h}).addTo(map);
+                
+                let fillColor = '#' + (hashCode(plots[h].owner) % 3840  + 256).toString(16);
+                let fillOpacity = 0.3;
+                if (plots[h].owner == wallet) {
+                    fillOpacity = 1.0;
+                    fillColor = '#1d1';
+                }
+
+                polygons[h] = L.polygon(cords, {weight:5, color: 'white', fillColor: fillColor, fillOpacity: fillOpacity, id:h}).addTo(map);
                 polygons[h].on('click', handleClick);
             }
             
-            loadSales();
+            //loadSales();
         }).catch(err => {
             console.log('land data error:', err);
         })
@@ -185,18 +226,20 @@
 </script>
 </head>
 <body>
-     <div id="map"></div>
-     <div id="land_data">
-         <!--
-         <a href="javascript:void(0);" onclick="adjust(1)">+ Sin</a>
-         <a href="javascript:void(0);" onclick="adjust(2)">- Sin</a><br><br>
-         <a href="javascript:void(0);" onclick="adjust(3)">+ Cos</a>
-         <a href="javascript:void(0);" onclick="adjust(4)">- Cos</a><br><br>
-         <a href="javascript:void(0);" onclick="adjust(5)">+ Radius Sin</a>
-         <a href="javascript:void(0);" onclick="adjust(6)">- Radius Sin</a><br><br>
-         <a href="javascript:void(0);" onclick="adjust(7)">+ Radius Cos</a>
-         <a href="javascript:void(0);" onclick="adjust(8)">- Radius Cos</a>
-         -->
+     <div class="wrapper">
+         <div id="map"></div>
+         <div id="land_data">
+             <!--
+             <a href="javascript:void(0);" onclick="adjust(1)">+ Sin</a>
+             <a href="javascript:void(0);" onclick="adjust(2)">- Sin</a><br><br>
+             <a href="javascript:void(0);" onclick="adjust(3)">+ Cos</a>
+             <a href="javascript:void(0);" onclick="adjust(4)">- Cos</a><br><br>
+             <a href="javascript:void(0);" onclick="adjust(5)">+ Radius Sin</a>
+             <a href="javascript:void(0);" onclick="adjust(6)">- Radius Sin</a><br><br>
+             <a href="javascript:void(0);" onclick="adjust(7)">+ Radius Cos</a>
+             <a href="javascript:void(0);" onclick="adjust(8)">- Radius Cos</a>
+             -->
+         </div>
      </div>
      <script>
          var map = L.map('map').setView([(dtm.lat_max - dtm.lat_min) / 2 + dtm.lat_min, (dtm.lon_max - dtm.lon_min) / 2 + dtm.lon_min], 13);
