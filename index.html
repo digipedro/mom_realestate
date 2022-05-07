@@ -42,7 +42,7 @@
     var dtms = [
           {
               quadrangle: 'Sinus Sabaeus',
-              name: 'Sinus Sabaeus (MC-20)',
+              name: 'Crater within Schiaparelli Crater filled with layered rock',
               lat_max: -0.7749849480450145,
               lat_min: -1.102258120716676,
               lon_min: 13.807780684400248,
@@ -54,7 +54,7 @@
           },
           {
               quadrangle: 'Cebrenia',
-              name: 'Cebrenia (MC-07)',
+              name: 'Very well-preserved 900-meter northern plains crater',
               lat_max: 61.59365849225825,
               lat_min: 61.40250792700551,
               lon_min: 155.3095410977765,
@@ -66,7 +66,7 @@
           },
           {
               quadrangle: 'Tharsis',
-              name: 'Tharsis (MC-09)',
+              name: 'Channels south of the base of Ascraeus Mons',
               lat_max: 6.119311830162541,
               lat_min: 5.8694742922181256,
               lon_min: -105.55054409387755,
@@ -78,7 +78,7 @@
           },
           {
               quadrangle: 'Oxia Palus',
-              name: 'Oxia Palus (MC-11)',
+              name: 'Spacing and arrangement of barchan dunes in Oyama Crater',
               lat_max: 23.278141150806913,
               lat_min: 23.109008524817494,
               lon_min: -20.450766618904463,
@@ -87,6 +87,30 @@
               skew_cos: 0.57,
               radius_sin: 0.005,
               radius_cos: 0.0056
+          },
+          {
+              quadrangle: 'Arabia',
+              name: 'Bright to dark slope streak in Arabia Terra',
+              lat_max: 6.112796990752151,
+              lat_min: 5.939261663347351,
+              lon_min: 16.891325932580315,
+              lon_max: 16.978257488449866,
+              skew_sin: 0.15,
+              skew_cos: 0.08,
+              radius_sin: 0.0046,
+              radius_cos: 0.0048
+          },
+          {
+              quadrangle: 'Margaritifer Sinus',
+              name: 'Possible MSL rover landing site Holden Crater',
+              lat_max: -26.446284215758347,
+              lat_min: -26.83921835787541,
+              lon_min: -34.94364380627412,
+              lon_max: -34.812789089291044,
+              skew_sin: 0.7,
+              skew_cos: 0.64,
+              radius_sin: 0.00475,
+              radius_cos: 0.0051
           },
       ];
     var dtm = dtms[0];
@@ -154,6 +178,7 @@
                 }
             }
         }
+        document.getElementById('land_data').innerHTML = '';
     }
     
     function hashCode(str) {
@@ -229,6 +254,7 @@
      <div class="wrapper">
          <div id="map"></div>
          <div id="land_data">
+             Loading sale data...
              <!--
              <a href="javascript:void(0);" onclick="adjust(1)">+ Sin</a>
              <a href="javascript:void(0);" onclick="adjust(2)">- Sin</a><br><br>
