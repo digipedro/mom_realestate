@@ -101,6 +101,7 @@
               radius_cos: 0.0048
           },
           {
+              // 5
               quadrangle: 'Margaritifer Sinus',
               name: 'Possible MSL rover landing site Holden Crater',
               lat_max: -26.446284215758347,
@@ -111,6 +112,18 @@
               skew_cos: 0.64,
               radius_sin: 0.00475,
               radius_cos: 0.0051
+          },
+          {
+              quadrangle: 'Casius',
+              name: 'Fractures in Utopia Planitia',
+              lat_max: 36.60051390809603,
+              lat_min: 36.270509421685254,
+              lon_min: 103.10745793108259,
+              lon_max: 103.25505986061638,
+              skew_sin: 0.34,
+              skew_cos: 0.25,
+              radius_sin: 0.0046,
+              radius_cos: 0.0055
           },
       ];
     var dtm = dtms[0];
@@ -136,6 +149,7 @@
         }
         plot.asset_id = '<a href="https://wax.atomichub.io/explorer/asset/' + plot.asset_id + '" targe="_blank">' + plot.asset_id+ '</a>';
         let img = plot.backimg;
+        plot.minted = new Date(Number(plot.minted_at_time)).toLocaleDateString();
         delete plot.backimg;
         delete plot.latitude;
         delete plot.longitude;
